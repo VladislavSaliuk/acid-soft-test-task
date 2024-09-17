@@ -26,7 +26,7 @@ public class Book {
     private String author;
 
     @Column(name = "publication_year")
-    private String publicationYear;
+    private int publicationYear;
 
     private String genre;
 

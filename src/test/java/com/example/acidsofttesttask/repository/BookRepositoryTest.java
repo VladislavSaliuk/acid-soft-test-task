@@ -20,7 +20,6 @@ public class BookRepositoryTest {
 
     @Autowired
     BookRepository bookRepository;
-
     @Test
     void save_shouldSaveBookToDatabase() {
         Book book = new Book();
