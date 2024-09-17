@@ -3,6 +3,7 @@ package com.example.acidsofttesttask.rest;
 
 import com.example.acidsofttesttask.entity.Book;
 import com.example.acidsofttesttask.service.BookService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +17,7 @@ public class BookRestController {
     }
     @PostMapping("/books")
     @ResponseStatus(HttpStatus.CREATED)
-    public Book createBook(@RequestBody Book book) {
+    public Book createBook(@RequestBody @Valid Book book) {
         return bookService.createBook(book);
     }
 
@@ -34,7 +35,7 @@ public class BookRestController {
 
     @PutMapping("/books")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateBook(@RequestBody Book book) {
+    public void updateBook(@RequestBody @Valid Book book) {
         bookService.updateBook(book);
     }
 

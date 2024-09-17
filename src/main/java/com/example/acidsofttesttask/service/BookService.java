@@ -1,12 +1,15 @@
 package com.example.acidsofttesttask.service;
 
 import com.example.acidsofttesttask.entity.Book;
+import com.example.acidsofttesttask.exception.BookException;
 import com.example.acidsofttesttask.exception.BookNotFoundException;
 import com.example.acidsofttesttask.repository.BookRepository;
 import jakarta.transaction.Transactional;
+import org.hibernate.validator.constraints.ISBN;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BookService {
@@ -16,6 +19,11 @@ public class BookService {
     }
 
     public Book createBook(Book book) {
+
+        if(bookRepository.existsByISBN(book.getISBN())) {
+            throw new BookException("Book with " + book.getISBN() + " ISBN already exists!");
+        }
+
         return bookRepository.save(book);
     }
 
@@ -25,25 +33,33 @@ public class BookService {
 
     public Book getById(long bookId) {
         return bookRepository.findById(bookId)
-                .orElseThrow(() -> new BookNotFoundException("Book with Id " + bookId + " not found."));
+                .orElseThrow(() -> new BookNotFoundException("Book with Id " + bookId + " not found!"));
     }
 
     @Transactional
     public void updateBook(Book book) {
 
         Book updatedBook = bookRepository.findById(book.getBookId())
-                .orElseThrow(() -> new BookNotFoundException("Book with Id " + book.getBookId() + " not found."));
+                .orElseThrow(() -> new BookNotFoundException("Book with Id " + book.getBookId() + " not found!"));
 
-        updatedBook.setTitle(book.getTitle());
-        updatedBook.setAuthor(book.getAuthor());
-        updatedBook.setPublicationYear(book.getPublicationYear());
-        updatedBook.setGenre(book.getGenre());
-        updatedBook.setISBN(book.getISBN());
+        if(bookRepository.existsByISBN(book.getISBN())) {
+            throw new BookException("Book with " + book.getISBN() + " ISBN already exists!");
+        } else {
+            updatedBook.setTitle(book.getTitle());
+            updatedBook.setAuthor(book.getAuthor());
+            updatedBook.setPublicationYear(book.getPublicationYear());
+            updatedBook.setGenre(book.getGenre());
+            updatedBook.setISBN(book.getISBN());
+        }
 
     }
 
     public void removeById(long bookId) {
-        bookRepository.deleteById(bookId);
+        if(bookRepository.existsByBookId(bookId)) {
+            bookRepository.deleteById(bookId);
+        } else {
+            throw new BookNotFoundException("Book with Id " + bookId + " not found!");
+        }
     }
 
 }

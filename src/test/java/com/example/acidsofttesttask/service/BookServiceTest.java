@@ -2,6 +2,7 @@ package com.example.acidsofttesttask.service;
 
 
 import com.example.acidsofttesttask.entity.Book;
+import com.example.acidsofttesttask.exception.BookException;
 import com.example.acidsofttesttask.exception.BookNotFoundException;
 import com.example.acidsofttesttask.repository.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,15 +39,33 @@ public class BookServiceTest {
     @Test
     void createBook_shouldReturnBook_whenInputContainsBook() {
 
+        when(bookRepository.existsByISBN(book.getISBN()))
+                .thenReturn(false);
+
         when(bookRepository.save(book))
                 .thenReturn(book);
 
         Book actualBook = bookService.createBook(book);
 
-        assertNotNull(actualBook);
         assertEquals(book, actualBook);
 
+        verify(bookRepository).existsByISBN(book.getISBN());
         verify(bookRepository).save(book);
+
+    }
+
+    @Test
+    void createBook_shouldThrowException_whenInputContainsBookWithExistingISBN() {
+
+        when(bookRepository.existsByISBN(book.getISBN()))
+                .thenReturn(true);
+
+        BookException exception = assertThrows(BookException.class, () -> bookService.createBook(book));
+
+        assertEquals("Book with " + book.getISBN() + " ISBN already exists!", exception.getMessage());
+
+        verify(bookRepository).existsByISBN(book.getISBN());
+        verify(bookRepository, never()).save(book);
 
     }
 
@@ -94,7 +113,7 @@ public class BookServiceTest {
 
         BookNotFoundException exception = assertThrows(BookNotFoundException.class, () -> bookService.getById(bookId));
 
-        assertEquals("Book with Id " + bookId + " not found.", exception.getMessage());
+        assertEquals("Book with Id " + bookId + " not found!", exception.getMessage());
 
         verify(bookRepository).findById(bookId);
 
@@ -103,21 +122,49 @@ public class BookServiceTest {
     @Test
     void updateBook_shouldUpdateBook_whenInputContainsBook() {
 
-        Book updatedBook = Book.builder()
-                .bookId(1L)
-                .title("Test title 1")
-                .author("Test author 1")
-                .publicationYear(2022)
-                .genre("Test genre 1")
-                .ISBN("111111111111")
-                .build();
+        when(bookRepository.findById(book.getBookId()))
+                .thenReturn(Optional.ofNullable(book));
+
+        when(bookRepository.existsByISBN(book.getISBN()))
+                .thenReturn(false);
+
+        bookService.updateBook(book);
+
+        verify(bookRepository).findById(book.getBookId());
+        verify(bookRepository).existsByISBN(book.getISBN());
+
+    }
+
+    @Test
+    void updateBook_shouldThrowException_whenInputContainsBookWithNotExistingId() {
+
+        when(bookRepository.findById(book.getBookId()))
+                .thenReturn(Optional.empty());
+
+        BookNotFoundException exception = assertThrows(BookNotFoundException.class, () -> bookService.updateBook(book));
+
+        assertEquals("Book with Id " + book.getBookId() + " not found!", exception.getMessage());
+
+        verify(bookRepository).findById(book.getBookId());
+        verify(bookRepository, never()).existsByISBN(book.getISBN());
+
+    }
+
+    @Test
+    void updateBook_shouldThrowException_whenInputContainsBookWithExistingISBN() {
 
         when(bookRepository.findById(book.getBookId()))
                 .thenReturn(Optional.ofNullable(book));
 
-        bookService.updateBook(updatedBook);
+        when(bookRepository.existsByISBN(book.getISBN()))
+                .thenReturn(true);
+
+        BookException exception = assertThrows(BookException.class, () -> bookService.updateBook(book));
+
+        assertEquals("Book with " + book.getISBN() + " ISBN already exists!", exception.getMessage());
 
         verify(bookRepository).findById(book.getBookId());
+        verify(bookRepository).existsByISBN(book.getISBN());
 
     }
 
@@ -126,11 +173,32 @@ public class BookServiceTest {
 
         long bookId = 1L;
 
+        when(bookRepository.existsByBookId(bookId))
+                .thenReturn(true);
+
         doNothing().when(bookRepository).deleteById(bookId);
 
         bookService.removeById(bookId);
 
+        verify(bookRepository).existsByBookId(bookId);
         verify(bookRepository).deleteById(bookId);
+
+    }
+
+    @Test
+    void removeById_shouldThrowException_whenInputContainsBookWithNotExistingId() {
+
+        long bookId = 11L;
+
+        when(bookRepository.existsByBookId(bookId))
+                .thenReturn(false);
+
+        BookNotFoundException exception = assertThrows(BookNotFoundException.class, () -> bookService.removeById(bookId));
+
+        assertEquals("Book with Id " + bookId + " not found!", exception.getMessage());
+
+        verify(bookRepository).existsByBookId(bookId);
+        verify(bookRepository, never()).deleteById(bookId);
 
     }
 
