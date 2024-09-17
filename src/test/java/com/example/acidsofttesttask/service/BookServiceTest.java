@@ -32,7 +32,7 @@ public class BookServiceTest {
                 .author("Test author")
                 .publicationYear(2024)
                 .genre("Test genre")
-                .ISBN("1234567890123111111")
+                .ISBN("1234567890123")
                 .build();
     }
     @Test
