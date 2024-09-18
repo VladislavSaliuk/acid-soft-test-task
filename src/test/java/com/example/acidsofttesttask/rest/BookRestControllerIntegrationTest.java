@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -13,6 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.stream.Stream;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -40,6 +44,22 @@ public class BookRestControllerIntegrationTest {
                 .ISBN("1234567890123")
                 .build();
     }
+
+    static Stream<Arguments> provideTestData() {
+        return Stream.of(
+                Arguments.of("The Great Gatsby", "F. Scott Fitzgerald", "Fiction"),
+                Arguments.of("1984", "George Orwell", "Dystopian"),
+                Arguments.of("To Kill a Mockingbird", "Harper Lee", "Fiction"),
+                Arguments.of("Moby Dick", "Herman Melville", "Adventure"),
+                Arguments.of("Pride and Prejudice", "Jane Austen", "Romance"),
+                Arguments.of("The Catcher in the Rye", "J.D. Salinger", "Fiction"),
+                Arguments.of("Brave New World", "Aldous Huxley", "Dystopian"),
+                Arguments.of("The Hobbit", "J.R.R. Tolkien", "Fantasy"),
+                Arguments.of("Crime and Punishment", "Fyodor Dostoevsky", "Philosophical Fiction"),
+                Arguments.of("War and Peace", "Leo Tolstoy", "Historical Fiction")
+        );
+    }
+
     @Test
     void createBook_shouldReturnCreatedStatus() throws Exception {
 
@@ -87,6 +107,49 @@ public class BookRestControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].bookId").value(1));
 
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideTestData")
+    void searchBooksByTitle_shouldReturnMatchingBooks(String title, String author) throws Exception {
+        mockMvc.perform(get("/books/search")
+                        .param("title", title))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].title").value(title))
+                .andExpect(jsonPath("$[0].author").value(author));
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideTestData")
+    void searchBooksByAuthor_shouldReturnMatchingBooks(String title, String author) throws Exception {
+        mockMvc.perform(get("/books/search")
+                        .param("author", author))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].title").value(title))
+                .andExpect(jsonPath("$[0].author").value(author));
+    }
+    @ParameterizedTest
+    @MethodSource("provideTestData")
+    void searchBooksByMultipleParams_shouldReturnMatchingBooks(String title, String author, String genre) throws Exception {
+        mockMvc.perform(get("/books/search")
+                        .param("title", title)
+                        .param("author", author)
+                        .param("genre", genre))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].title").value(title))
+                .andExpect(jsonPath("$[0].author").value(author))
+                .andExpect(jsonPath("$[0].genre").value(genre));
+    }
+
+    @Test
+    void searchBooks_noMatchingResults_shouldReturnEmptyList() throws Exception {
+        mockMvc.perform(get("/books/search")
+                        .param("title", "Non-existent title"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @ParameterizedTest

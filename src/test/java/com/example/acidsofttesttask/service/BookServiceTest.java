@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Optional;
@@ -107,6 +108,70 @@ public class BookServiceTest {
 
         verify(bookRepository).findAll(pageable);
 
+    }
+
+    @Test
+    void searchBooks_shouldReturnBooks_whenSearchedByTitle() {
+
+        when(bookRepository.findAll(any(Specification.class)))
+                .thenReturn(List.of(book));
+
+        List<Book> result = bookService.searchBooks("Test title", null, null);
+
+        assertEquals(1, result.size());
+        assertEquals(book, result.get(0));
+        verify(bookRepository).findAll(any(Specification.class));
+    }
+
+    @Test
+    void searchBooks_shouldReturnBooks_whenSearchedByAuthor() {
+
+        when(bookRepository.findAll(any(Specification.class)))
+                .thenReturn(List.of(book));
+
+        List<Book> result = bookService.searchBooks(null, "Test author", null);
+
+        assertEquals(1, result.size());
+        assertEquals(book, result.get(0));
+        verify(bookRepository).findAll(any(Specification.class));
+    }
+
+    @Test
+    void searchBooks_shouldReturnBooks_whenSearchedByGenre() {
+
+        when(bookRepository.findAll(any(Specification.class)))
+                .thenReturn(List.of(book));
+
+        List<Book> result = bookService.searchBooks(null, null, "Test genre");
+
+        assertEquals(1, result.size());
+        assertEquals(book, result.get(0));
+        verify(bookRepository).findAll(any(Specification.class));
+    }
+
+    @Test
+    void searchBooks_shouldReturnBooks_whenSearchedByTitleAndAuthor() {
+
+        when(bookRepository.findAll(any(Specification.class)))
+                .thenReturn(List.of(book));
+
+        List<Book> result = bookService.searchBooks("Test title", "Test author", null);
+
+        assertEquals(1, result.size());
+        assertEquals(book, result.get(0));
+        verify(bookRepository).findAll(any(Specification.class));
+    }
+
+    @Test
+    void searchBooks_shouldReturnEmptyList_whenNoBooksMatch() {
+
+        when(bookRepository.findAll(any(Specification.class)))
+                .thenReturn(List.of());
+
+        List<Book> result = bookService.searchBooks("Non-existent title", null, null);
+
+        assertEquals(0, result.size());
+        verify(bookRepository).findAll(any(Specification.class));
     }
 
     @Test

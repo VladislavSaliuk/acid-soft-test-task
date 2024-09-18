@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 public class BookRestController {
     private BookService bookService;
@@ -29,6 +31,14 @@ public class BookRestController {
             @RequestParam(required = false, defaultValue = "10") int pageSize) {
         Pageable pageable = PageRequest.of(offset, pageSize);
         return bookService.getAll(pageable);
+    }
+
+    @GetMapping("/books/search")
+    public List<Book> searchBooks(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String genre) {
+        return bookService.searchBooks(title, author, genre);
     }
 
     @GetMapping("/books/{id}")

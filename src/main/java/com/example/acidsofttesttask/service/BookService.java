@@ -5,13 +5,12 @@ import com.example.acidsofttesttask.exception.BookException;
 import com.example.acidsofttesttask.exception.BookNotFoundException;
 import com.example.acidsofttesttask.repository.BookRepository;
 import jakarta.transaction.Transactional;
-import org.hibernate.validator.constraints.ISBN;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class BookService {
@@ -40,6 +39,26 @@ public class BookService {
         }
 
         return bookRepository.findAll(pageable);
+    }
+
+    public List<Book> searchBooks(String title, String author, String genre) {
+
+        Specification<Book> specification = Specification.where(null);
+
+        if (title != null && !title.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), "%" + title.toLowerCase() + "%"));
+        }
+        if (author != null && !author.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("author")), "%" + author.toLowerCase() + "%"));
+        }
+        if (genre != null && !genre.isEmpty()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("genre")), "%" + genre.toLowerCase() + "%"));
+        }
+
+        return bookRepository.findAll(specification);
     }
 
     public Book getById(long bookId) {
