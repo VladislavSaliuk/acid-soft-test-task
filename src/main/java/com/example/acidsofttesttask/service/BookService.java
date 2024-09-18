@@ -6,6 +6,8 @@ import com.example.acidsofttesttask.exception.BookNotFoundException;
 import com.example.acidsofttesttask.repository.BookRepository;
 import jakarta.transaction.Transactional;
 import org.hibernate.validator.constraints.ISBN;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,8 +29,17 @@ public class BookService {
         return bookRepository.save(book);
     }
 
-    public List<Book> getAll() {
-        return bookRepository.findAll();
+    public Page<Book> getAll(Pageable pageable) {
+
+        if (pageable.getOffset() < 0) {
+            throw new IllegalArgumentException("Offset must be a non-negative integer.");
+        }
+
+        if (pageable.getPageSize() <= 0) {
+            throw new IllegalArgumentException("Page size must be a positive integer.");
+        }
+
+        return bookRepository.findAll(pageable);
     }
 
     public Book getById(long bookId) {

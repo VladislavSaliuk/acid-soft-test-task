@@ -79,9 +79,13 @@ public class BookRestControllerIntegrationTest {
     @Test
     void getBooks_shouldReturnOkStatus() throws Exception {
 
-        mockMvc.perform(get("/books"))
+        mockMvc.perform(get("/books")
+                        .param("offset", "0")
+                        .param("pageSize", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(10));
+                .andExpect(jsonPath("$.length()").value(11))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].bookId").value(1));
 
     }
 

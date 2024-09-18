@@ -8,12 +8,19 @@ import com.example.acidsofttesttask.repository.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -36,6 +43,22 @@ public class BookServiceTest {
                 .ISBN("1234567890123")
                 .build();
     }
+
+    static Stream<Pageable> pageableProvider() {
+        return Stream.of(
+                PageRequest.of(0, 5),
+                PageRequest.of(1, 10),
+                PageRequest.of(2, 20),
+                PageRequest.of(3, 25),
+                PageRequest.of(4, 30),
+                PageRequest.of(5, 40),
+                PageRequest.of(6, 45),
+                PageRequest.of(7, 50),
+                PageRequest.of(8, 55),
+                PageRequest.of(9, 60)
+        );
+    }
+
     @Test
     void createBook_shouldReturnBook_whenInputContainsBook() {
 
@@ -69,20 +92,20 @@ public class BookServiceTest {
 
     }
 
-    @Test
-    void getAll_shouldReturnBookList() {
+    @ParameterizedTest
+    @MethodSource("pageableProvider")
+    void getAll_shouldReturnBookList(Pageable pageable) {
 
-        List<Book> expectedBookList = List.of(book);
+        Page page = new PageImpl(List.of(book), pageable, 2);
 
-        when(bookRepository.findAll())
-                .thenReturn(expectedBookList);
+        when(bookRepository.findAll(pageable))
+                .thenReturn(page);
 
-        List<Book> actualBookList = bookService.getAll();
+        Page<Book> actualBookPage = bookService.getAll(pageable);
 
-        assertFalse(actualBookList.isEmpty());
-        assertEquals(expectedBookList, actualBookList);
+        assertEquals(page, actualBookPage);
 
-        verify(bookRepository).findAll();
+        verify(bookRepository).findAll(pageable);
 
     }
 

@@ -4,10 +4,11 @@ package com.example.acidsofttesttask.rest;
 import com.example.acidsofttesttask.entity.Book;
 import com.example.acidsofttesttask.service.BookService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 public class BookRestController {
@@ -23,8 +24,11 @@ public class BookRestController {
 
     @GetMapping("/books")
     @ResponseStatus(HttpStatus.OK)
-    public List<Book> getBooks() {
-        return bookService.getAll();
+    public Page<Book> getBooks(
+            @RequestParam(required = false, defaultValue = "0") int offset,
+            @RequestParam(required = false, defaultValue = "10") int pageSize) {
+        Pageable pageable = PageRequest.of(offset, pageSize);
+        return bookService.getAll(pageable);
     }
 
     @GetMapping("/books/{id}")
