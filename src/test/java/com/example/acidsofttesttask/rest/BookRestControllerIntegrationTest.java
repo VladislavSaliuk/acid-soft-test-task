@@ -71,7 +71,6 @@ public class BookRestControllerIntegrationTest {
                 .andExpect(jsonPath("$.bookId").value(11L));
 
     }
-
     @Test
     void updateBook_shouldReturnNoContentStatus() throws Exception {
 
